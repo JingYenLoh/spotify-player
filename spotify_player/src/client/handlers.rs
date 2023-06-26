@@ -191,6 +191,7 @@ pub async fn start_player_event_watchers(
                 track,
                 artists,
                 scroll_offset,
+                ..
             } => {
                 if let Some(current_track) = state.player.read().current_playing_track() {
                     if current_track.name != *track {
@@ -199,10 +200,11 @@ pub async fn start_player_event_watchers(
                         *artists = map_join(&current_track.artists, |a| &a.name, ", ");
                         *scroll_offset = 0;
 
+                        let track_id = current_track.id.clone().unwrap().to_string();
+
                         client_pub
                             .send(ClientRequest::GetLyric {
-                                track: track.clone(),
-                                artists: artists.clone(),
+                                track_id,
                             })
                             .unwrap_or_default();
                     }

@@ -57,8 +57,7 @@ pub enum ClientRequest {
     GetCurrentUserQueue,
     #[cfg(feature = "lyric-finder")]
     GetLyric {
-        track: String,
-        artists: String,
+        track_id: String,
     },
     #[cfg(feature = "streaming")]
     NewStreamingConnection,
@@ -350,13 +349,13 @@ fn handle_global_command(
                 let artists = map_join(&track.artists, |a| &a.name, ", ");
                 ui.create_new_page(PageState::Lyric {
                     track: track.name.clone(),
+                    track_id: track.id.clone().unwrap().to_string(),
                     artists: artists.clone(),
                     scroll_offset: 0,
                 });
 
                 client_pub.send(ClientRequest::GetLyric {
-                    track: track.name.clone(),
-                    artists,
+                    track_id: track.id.clone().unwrap().to_string(),
                 })?;
             }
         }

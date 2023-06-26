@@ -501,16 +501,18 @@ pub fn render_lyric_page(
         .split(rect);
 
     // 3. Construct the app's widgets
-    let (track, artists, scroll_offset) = match ui.current_page_mut() {
+    let (track, track_id, artists, scroll_offset) = match ui.current_page_mut() {
         PageState::Lyric {
             track,
+            track_id,
             artists,
             scroll_offset,
-        } => (track, artists, scroll_offset),
+        } => (track, track_id, artists, scroll_offset),
         s => anyhow::bail!("expect a lyric page state, found {s:?}"),
     };
 
-    let (desc, lyric) = match data.caches.lyrics.peek(&format!("{track} {artists}")) {
+    // TODO query lru cache properly
+    let (desc, lyric) = match data.caches.lyrics.peek(track_id) {
         None => {
             frame.render_widget(Paragraph::new("Loading..."), rect);
             return Ok(());
@@ -520,8 +522,6 @@ pub fn render_lyric_page(
             return Ok(());
         }
         Some(lyric_finder::LyricResult::Some {
-            track,
-            artists,
             lyric,
         }) => (format!("{track} by {artists}"), format!("\n{lyric}")),
     };

@@ -202,16 +202,25 @@ impl Client {
                     .insert(category.id, playlists);
             }
             #[cfg(feature = "lyric-finder")]
-            ClientRequest::GetLyric { track, artists } => {
+            ClientRequest::GetLyric { track_id } => {
                 let client = lyric_finder::Client::from_http_client(&self.http);
-                let query = format!("{track} {artists}");
+                // let query = format!("{track} {artists}");
 
-                if !state.data.read().caches.lyrics.contains(&query) {
-                    let result = client.get_lyric(&query).await.context(format!(
-                        "failed to get lyric for track {track} - artists {artists}"
-                    ))?;
+                if !state.data.read().caches.lyrics.contains(&track_id) {
+                    let stripped = track_id.strip_prefix("spotify:track:").unwrap_or(&track_id);
+                    let result = client
+                        .get_lyric(&stripped)
+                        .await
+                        .context(format!("failed to get lyric for track TODO - artists TODO"))?;
 
-                    state.data.write().caches.lyrics.put(query, result);
+                    match result {
+                        lyric_finder::LyricResult::None => {
+                            tracing::info!("no lyric found for track {}", stripped)
+                        }
+                        _ => tracing::info!("found lyric for track {}", stripped),
+                    }
+
+                    state.data.write().caches.lyrics.put(track_id, result);
                 }
             }
             ClientRequest::ConnectDevice(id) => {
