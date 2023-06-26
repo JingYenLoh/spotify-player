@@ -14,6 +14,9 @@ mod token;
 mod ui;
 mod utils;
 
+// as `tui` is not actively maintained, we migrate to use `ratatui`
+extern crate ratatui as tui;
+
 use anyhow::{Context, Result};
 use std::io::Write;
 
@@ -22,7 +25,7 @@ fn init_app_cli_arguments() -> Result<clap::ArgMatches> {
     let default_config_folder = config::get_config_folder_path()?;
 
     let cmd = clap::Command::new("spotify_player")
-        .version("0.14.0")
+        .version("0.14.1")
         .about("A command driven spotify player")
         .author("Thang Pham <phamducthang1234@gmail>")
         .subcommand(cli::init_get_subcommand())
@@ -133,6 +136,17 @@ fn init_logging(cache_folder: &std::path::Path) -> Result<()> {
 
 #[tokio::main]
 async fn start_app(state: state::SharedState, is_daemon: bool) -> Result<()> {
+    if !is_daemon {
+        #[cfg(feature = "image")]
+        {
+            // initialize `viuer` supports for kitty, iterm2, and sixel
+            viuer::get_kitty_support();
+            viuer::is_iterm_supported();
+            #[cfg(feature = "sixel")]
+            viuer::is_sixel_supported();
+        }
+    }
+
     // client channels
     let (client_pub, client_sub) = flume::unbounded::<event::ClientRequest>();
 
@@ -163,7 +177,7 @@ async fn start_app(state: state::SharedState, is_daemon: bool) -> Result<()> {
         let state = state.clone();
         async move {
             if let Err(err) = cli::start_socket(client, state).await {
-                tracing::warn!("Failed to run client socket for CLI: {err}");
+                tracing::warn!("Failed to run client socket for CLI: {err:#}");
             }
         }
     }));
@@ -212,7 +226,7 @@ async fn start_app(state: state::SharedState, is_daemon: bool) -> Result<()> {
             move || {
                 if let Err(err) = media_control::start_event_watcher(state, client_pub) {
                     tracing::error!(
-                        "Failed to start the application's media control event watcher: err={err:?}"
+                        "Failed to start the application's media control event watcher: err={err:#?}"
                     );
                 }
             }
@@ -307,7 +321,7 @@ fn main() -> Result<()> {
                     daemonize.start()?;
                 }
                 if let Err(err) = start_app(state, is_daemon) {
-                    tracing::error!("Encountered an error when running the application: {err}");
+                    tracing::error!("Encountered an error when running the application: {err:#}");
                 }
                 Ok(())
             }

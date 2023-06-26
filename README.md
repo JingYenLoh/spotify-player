@@ -109,6 +109,10 @@ Application's prebuilt binaries can be found in the [Releases Page](https://gith
 
 **Note**: to run the application, Linux systems need to install additional dependencies as specified in the [Dependencies section](#linux).
 
+### Homebrew
+
+Run `brew install spotify-player` to install the application.
+
 ### Cargo
 
 Run `cargo install spotify_player` to install the application from [crates.io](https://crates.io/crates/spotify_player).
@@ -116,6 +120,10 @@ Run `cargo install spotify_player` to install the application from [crates.io](h
 ### AUR
 
 Run `yay -S spotify-player` to install the application as an AUR package.
+
+### Void Linux
+
+Run `xbps-install -S spotify-player` to install the application.
 
 ### FreeBSD
 
